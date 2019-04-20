@@ -5,11 +5,14 @@
  */
 package Test;
 
+import Test.cas.CasDeTestDF;
+import classes.DF;
 import static com.mdalsoft.test.DefaultTestLogger.logTest;
 import com.mdalsoft.test.Testable;
 import com.mdalsoft.test.TestableAdapter;
 import example.TestLoggerExample;
 import interfaces.Fonction;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -24,7 +27,7 @@ public class DFTestLogger
     String sep = "\\";
     String testFileLogger ="com.mdalsoft.test.FileTestLogger";
     String dbTestLogger ="com.mdalsoft.test.DbTestLogger";  
-    String firstMethodToTest = "Test.DFTestLogger.testMonCas";
+    String firstMethodToTest = "Test.DFTestLogger.testsDifferencesFinies";
     static String classeATester = "Test.TestDF";
     
 //========================================================================================
@@ -46,7 +49,7 @@ public class DFTestLogger
             logTest(parTest, "start", false);
             DFTestLogger mtti = new DFTestLogger();
             parTest.put("testobjet", mtti);
-            boolean rt = mtti.testMonCas();
+            boolean rt = mtti.testsDifferencesFinies();
             parTest.put("testresult", rt);
            
             System.out.println("Situation du test " + rt);
@@ -73,12 +76,24 @@ public class DFTestLogger
 //============== LES AUTRES METHODES =====================================================
 //========================================================================================
 
-    public boolean testMonCas() throws Exception
+    public boolean testsDifferencesFinies() throws Exception
     {
         
         Map paramLogTest = initParamTest(System.currentTimeMillis(), firstMethodToTest, null);
         logTest(paramLogTest, "start", false);
         boolean testResult = false;
+        
+        //===========================================================================================
+        //======================   Cas de test ======================================================
+        
+        CasDeTestDF[] casdetests = {
+            new CasDeTestDF((double x) -> x, (double x) -> 1, 0, 1, 0, 1, 100, (double x) -> x),
+            new CasDeTestDF((double x) -> x - 2, (double x) -> 1, 0, 1, 0., 1, 100, (double x) -> x*x),
+            new CasDeTestDF((double x) -> x*x - 2, (double x) -> x, 0, 1, 0., 0, 100, (double x) -> x*x),
+            new CasDeTestDF((double x) -> 0, (double x) -> 0, 0, 1, 0., 0, 100, (double x) -> 0),
+            new CasDeTestDF((double x) -> Math.sin(-x), (double x) -> 0, 0, 1, 0., 0, 100, (double x) -> Math.sin(x)),
+        };
+        
         try
         {
             boolean threaded = true;
@@ -88,13 +103,25 @@ public class DFTestLogger
             boolean useDbUnit = false;
             boolean exportMasterData = false;
              
-            Map testParams = new HashMap();  
-            Object testData = null;
-            prepareChecking(testParams);
-            Testable tet = (Testable)Class.forName(classeATester).newInstance();
-            testParams.put("testedobject",tet);
-            tet.test(testParams);
-            testResult = checkResult(testParams); 
+            for (CasDeTestDF casDeTestDF : casdetests) 
+            {
+                Map testParams = new HashMap();  
+                Object testData = null;
+                prepareChecking(testParams, 
+                        casDeTestDF.getF(), 
+                        casDeTestDF.getC(),
+                        casDeTestDF.getA(), 
+                        casDeTestDF.getB(), 
+                        casDeTestDF.getU_a(),
+                        casDeTestDF.getU_b(),
+                        casDeTestDF.getN());
+                
+                Testable tet = (Testable)Class.forName(classeATester).newInstance();
+                testParams.put("testedobject",tet);
+                tet.test(testParams);
+                testResult = checkResult(testParams, casDeTestDF.getResultatAttendu()); 
+            }
+            
         }
         catch(Throwable th)
         {
@@ -113,65 +140,40 @@ public class DFTestLogger
     }
     
     
-    private void prepareChecking(Map testParams) throws Exception
+    private void prepareChecking(Map testParams, Fonction f, Fonction c, double a, double b, double u_a, double u_b, int n) throws Exception
     {
-        Fonction c = (double x)->0;
-        Fonction f = (double x)->0;
+        
         testParams.put("c", c);
         testParams.put("f", f);
-        testParams.put("a", 0.);
-        testParams.put("b", 1.);
-        testParams.put("u_a", 0.);
-        testParams.put("u_b", 0.);
-        testParams.put("longueur_maillage", 100);
+        testParams.put("a", a);
+        testParams.put("b", b);
+        testParams.put("u_a", u_a);
+        testParams.put("u_b", u_b);
+        testParams.put("longueur_maillage", n);
     }
     
-    private  boolean checkResult(Map testParams) throws Exception 
+    private  boolean checkResult(Map testParams, Fonction ra) throws Exception 
     {
         double resultatFonction[] = (double[]) testParams.get("resultatFonction");
         int longueur_maillage = (int) testParams.get("longueur_maillage");
         double a = (double) testParams.get("a");
         double b = (double) testParams.get("b");
-        double erreur_absolue = 0.00, norme_attendu = 0.00;
-        double e_h = 0.00, valeur_absolue;
+        double tol = 1e-8;
+        DF df = new DF();
+        double[] subdivision = df.subdivision(a, b, longueur_maillage);
         
     // ************************************************************************************** 
     //********      Résultat attendu    *****************************************************
     
         double[] resultat_attendu = new double[resultatFonction.length];
-        for(int i = 0; i < resultat_attendu.length; i++)
+        for(int i = 0; i < subdivision.length; i++)
         {
-            resultat_attendu[i] = 0.;
+            resultat_attendu[i] = ra.calcul(subdivision[i]);
         }
         
     //***************************************************************************************    
         
-        
-        if(resultatFonction == null && resultat_attendu == null)
-            return true;
-        else if (resultatFonction == null && resultat_attendu != null)
-            return false;
-        else if (resultatFonction != null && resultat_attendu == null)
-            return false;
-        else{
-            for(int i = 0; i < longueur_maillage - 1; i++){
-                erreur_absolue = erreur_absolue + Math.pow(resultatFonction[i] - resultat_attendu[i],2);
-                norme_attendu = norme_attendu + Math.pow(resultat_attendu[i], 2);
-                
-                if(resultatFonction[i] < resultat_attendu[i])
-                    valeur_absolue = resultat_attendu[i] - resultatFonction[i];
-                else
-                    valeur_absolue = resultatFonction[i] - resultat_attendu[i];
-                
-                if(e_h < valeur_absolue)
-                    e_h = valeur_absolue;
-            }
-            System.out.println(e_h + "   " + (b-a)/longueur_maillage);
-            if(Math.sqrt(norme_attendu) != 0.00)
-                return Math.sqrt(erreur_absolue)/Math.sqrt(norme_attendu) < Math.pow(10, -8);
-            else 
-                return Math.sqrt(erreur_absolue) < Math.pow(10, -8);
-        }
+        return checkExactitude(resultatFonction, resultat_attendu, longueur_maillage, a, b, tol);
         
     }
 
@@ -187,4 +189,52 @@ public class DFTestLogger
         parTest.put("testobjet", this);
         return parTest; 
     }
+    
+    private boolean checkExactitude(double[] resultatFonction, double[] resultat_attendu, int longueur_maillage, double a, double b, double tol)
+    {
+        double erreur_absolue = 0.00;
+        double norme_attendu = 0.00;
+        double e_h = 0.00;
+        double valeur_absolue;
+        
+        if(resultatFonction == null && resultat_attendu == null)
+            return true;
+        else if (resultatFonction == null && resultat_attendu != null)
+            return false;
+        else if (resultatFonction != null && resultat_attendu == null)
+            return false;
+        else
+        {
+              for (int i = 0; i < longueur_maillage - 1; i++) 
+              {
+                  e_h = Math.max(e_h, Math.abs(resultatFonction[i] - resultat_attendu[i]));
+              }
+              System.out.println("e_h = " + e_h + "   e_h < tol : " + (e_h < tol));
+              return e_h < tol; 
+//            for(int i = 0; i < longueur_maillage - 1; i++)
+//            {
+//                erreur_absolue = erreur_absolue + Math.pow(resultatFonction[i] - resultat_attendu[i],2);
+//                norme_attendu = norme_attendu + Math.pow(resultat_attendu[i], 2);
+//                
+//                valeur_absolue = Math.abs(resultat_attendu[i] - resultatFonction[i]);
+//                
+//                if(e_h < valeur_absolue)
+//                    e_h = valeur_absolue;
+//            }
+//            System.out.print(e_h + "   " + (b-a)/longueur_maillage + "   ");
+//            if(Math.sqrt(norme_attendu) != 0.00)
+//            {
+//                System.out.println(Math.sqrt(erreur_absolue)/Math.sqrt(norme_attendu) < tol);
+//                return Math.sqrt(erreur_absolue)/Math.sqrt(norme_attendu) < tol;
+//            }
+//                
+//            else 
+//            {
+//                System.out.println(Math.sqrt(erreur_absolue) < tol);
+//                return Math.sqrt(erreur_absolue) < tol;
+//            }
+//                
+        }
+    }
+    
 }

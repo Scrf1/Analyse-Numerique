@@ -7,6 +7,7 @@ package classes;
 
 import abstraites.VFabstrait;
 import interfaces.Fonction;
+import utilitaire.Integration;
 
 /**
  *
@@ -30,12 +31,12 @@ public class VF extends VFabstrait
             double pas = (b - a)/n;
 
 
-            for (int i = 0; i<maillage.length; i++)
+            for (int i = 1; i<maillage.length - 1; i++)
             {
-                tabf[i] = f.calcul(maillage[i])*pas*pas;
+                tabf[i] = Integration.gaussLegrend((maillage[i] + maillage[i-1]) / 2, (maillage[i+1] + maillage[i]) / 2, f);//f.calcul(maillage[i]) * pas *pas;
             }
-            tabf[0] += u_debut;
-            tabf[maillage.length-1] += u_fin;
+            tabf[0] = Integration.gaussLegrend(a + pas / 2, maillage[0] + pas / 2, f) - (a/pas - b) * u_debut;
+            tabf[maillage.length-1] = Integration.gaussLegrend(a, b, f) + (a / pas) * u_fin;
 
             //initialisation
             alpha[0] = 2;
