@@ -99,6 +99,20 @@ public class MatriceCreuse
     public int getNbreColonnes() {
         return nbreColonnes;
     }
+
+    /**
+     * @param nbreLignes the nbreLignes to set
+     */
+    public void setNbreLignes(int nbreLignes) {
+        this.nbreLignes = nbreLignes;
+    }
+
+    /**
+     * @param nbreColonnes the nbreColonnes to set
+     */
+    public void setNbreColonnes(int nbreColonnes) {
+        this.nbreColonnes = nbreColonnes;
+    }
     
     
 }
