@@ -6,6 +6,10 @@
 package Test;
 
 import static Test.DFTestLogger.classeATester;
+import Test.cas.CasDeTestDF;
+import Test.cas.CasDeTestVF;
+import classes.DF;
+import classes.VF;
 import static com.mdalsoft.test.DefaultTestLogger.logTest;
 import com.mdalsoft.test.Testable;
 import interfaces.Fonction;
@@ -45,7 +49,7 @@ public class VFTestLogger
             logTest(parTest, "start", false);
             DFTestLogger mtti = new DFTestLogger();
             parTest.put("testobjet", mtti);
-            boolean rt = mtti.testMonCas();
+            boolean rt = mtti.testsDifferencesFinies();
             parTest.put("testresult", rt);
            
             System.out.println("Situation du test " + rt);
@@ -72,12 +76,28 @@ public class VFTestLogger
 //============== LES AUTRES METHODES =====================================================
 //========================================================================================
 
-    public boolean testMonCas() throws Exception
+    public boolean testVolumesFinis() throws Exception
     {
         
         Map paramLogTest = initParamTest(System.currentTimeMillis(), firstMethodToTest, null);
         logTest(paramLogTest, "start", false);
         boolean testResult = false;
+        
+        //===========================================================================================
+        //======================   Cas de test ======================================================
+        
+        CasDeTestVF[] casdetests = 
+        {
+            new CasDeTestVF((double x) -> x, 0, 1, 100, (double x) -> x),
+            new CasDeTestVF((double x) -> x*x - 2, 0, 1, 100, (double x) -> x*x),
+            new CasDeTestVF((double x) -> x*x*x - 2, 0., 1, 100, (double x) -> x*x),
+            new CasDeTestVF((double x) -> 0, 0., 0, 100, (double x) -> 0),
+            new CasDeTestVF((double x) -> Math.cos(x), 1, 0.5403023058681398, 100, (double x) -> Math.cos(x)),
+            new CasDeTestVF((double x) -> 2 * Math.sin(x), 0., 0.8414709848078965, 100, (double x) -> Math.sin(x)),
+            new CasDeTestVF((double x) -> 1, 1, 1, 100, (double x) -> 1)
+        };
+        
+        
         try
         {
             boolean threaded = true;
@@ -87,13 +107,21 @@ public class VFTestLogger
             boolean useDbUnit = false;
             boolean exportMasterData = false;
              
-            Map testParams = new HashMap();  
-            Object testData = null;
-            prepareChecking(testParams);
-            Testable tet = (Testable) Class.forName(classeATester).newInstance();
-            testParams.put("testedobject",tet);
-            tet.test(testParams);
-            testResult = checkResult(testParams); 
+            for (CasDeTestVF casDeTestVF : casdetests) 
+            {
+                Map testParams = new HashMap();  
+                Object testData = null;
+                prepareChecking(testParams, 
+                        casDeTestVF.getF(), 
+                        casDeTestVF.getU_a(),
+                        casDeTestVF.getU_b(),
+                        casDeTestVF.getN());
+                
+                Testable tet = (Testable)Class.forName(classeATester).newInstance();
+                testParams.put("testedobject",tet);
+                tet.test(testParams);
+                testResult = checkResult(testParams, casDeTestVF.getResultatAttendu()); 
+            } 
         }
         catch(Throwable th)
         {
@@ -111,37 +139,44 @@ public class VFTestLogger
         //Fin de la méthode test mon cas
     }
     
-    private void prepareChecking(Map testParams) throws Exception
+    private void prepareChecking(Map testParams, Fonction f, double u_a, double u_b, int n) throws Exception
     {
-        Fonction f = (double x)->Math.sin(x);
         testParams.put("f", f);
-        testParams.put("a", 0.);
-        testParams.put("b", 1.);
-        testParams.put("u_a", 0.);
-        testParams.put("u_b", 0.);
-        testParams.put("longueur_maillage", 100);
+        testParams.put("u_a", u_a);
+        testParams.put("u_b", u_b);
+        testParams.put("longueur_maillage", n);
     }
     
-    private  boolean checkResult(Map testParams) throws Exception 
+    private  boolean checkResult(Map testParams, Fonction ra) throws Exception 
     {
-        double resultatFonction[] = (double[]) testParams.get("resultatFonction");
+     double resultatFonction[] = (double[]) testParams.get("resultatFonction");
         int longueur_maillage = (int) testParams.get("longueur_maillage");
         double a = (double) testParams.get("a");
         double b = (double) testParams.get("b");
-        double erreur_absolue = 0.00, norme_attendu = 0.00;
-        double e_h = 0.00, valeur_absolue;
+        double tol = 1e-6;
+        VF vf = new VF();
+        double[] subdivision = vf.subdivision(a, b, longueur_maillage);
         
     // ************************************************************************************** 
     //********      Résultat attendu    *****************************************************
     
         double[] resultat_attendu = new double[resultatFonction.length];
-        for(int i = 0; i < resultat_attendu.length; i++)
+        for(int i = 0; i < subdivision.length; i++)
         {
-            resultat_attendu[i] = Math.sin(a + i * (b-a) / longueur_maillage);
+            resultat_attendu[i] = ra.calcul(subdivision[i]);
         }
         
     //***************************************************************************************    
         
+        return checkExactitude(resultatFonction, resultat_attendu, longueur_maillage, a, b, tol);   
+    }
+
+    private boolean checkExactitude(double[] resultatFonction, double[] resultat_attendu, int longueur_maillage, double a, double b, double tol)
+    {
+        double erreur_absolue = 0.00;
+        double norme_attendu = 0.00;
+        double e_h = 0.00;
+        double valeur_absolue;
         
         if(resultatFonction == null && resultat_attendu == null)
             return true;
@@ -149,28 +184,34 @@ public class VFTestLogger
             return false;
         else if (resultatFonction != null && resultat_attendu == null)
             return false;
-        else{
-            for(int i = 0; i < longueur_maillage - 1; i++){
+        else
+        {
+              
+            for(int i = 0; i < longueur_maillage - 1; i++)
+            {
                 erreur_absolue = erreur_absolue + Math.pow(resultatFonction[i] - resultat_attendu[i],2);
                 norme_attendu = norme_attendu + Math.pow(resultat_attendu[i], 2);
                 
-                if(resultatFonction[i] < resultat_attendu[i])
-                    valeur_absolue = resultat_attendu[i] - resultatFonction[i];
-                else
-                    valeur_absolue = resultatFonction[i] - resultat_attendu[i];
+                valeur_absolue = Math.abs(resultat_attendu[i] - resultatFonction[i]);
                 
                 if(e_h < valeur_absolue)
                     e_h = valeur_absolue;
             }
-            System.out.println(e_h + "   " + (b - a) / longueur_maillage);
+            System.out.print(e_h + "   " + (b-a)/longueur_maillage + "   ");
             if(Math.sqrt(norme_attendu) != 0.00)
-                return Math.sqrt(erreur_absolue)/Math.sqrt(norme_attendu) < Math.pow(10, -8);
+            {
+                System.out.println(Math.sqrt(erreur_absolue)/Math.sqrt(norme_attendu) < tol);
+                return Math.sqrt(erreur_absolue)/Math.sqrt(norme_attendu) < tol;
+            }
+                
             else 
-                return Math.sqrt(erreur_absolue) < Math.pow(10, -8);
+            {
+                System.out.println(Math.sqrt(erreur_absolue) < tol);
+                return Math.sqrt(erreur_absolue) < tol;
+            }
+                
         }
-        
     }
-
    
     private Map initParamTest(long startTime, String firstMethodToTest, Object o) 
     {

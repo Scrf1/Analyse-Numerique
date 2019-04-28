@@ -86,12 +86,15 @@ public class DFTestLogger
         //===========================================================================================
         //======================   Cas de test ======================================================
         
-        CasDeTestDF[] casdetests = {
+        CasDeTestDF[] casdetests = 
+        {
             new CasDeTestDF((double x) -> x, (double x) -> 1, 0, 1, 0, 1, 100, (double x) -> x),
-            new CasDeTestDF((double x) -> x - 2, (double x) -> 1, 0, 1, 0., 1, 100, (double x) -> x*x),
-            new CasDeTestDF((double x) -> x*x - 2, (double x) -> x, 0, 1, 0., 0, 100, (double x) -> x*x),
+            new CasDeTestDF((double x) -> x*x - 2, (double x) -> 1, 0, 1, 0, 1, 100, (double x) -> x*x),
+            new CasDeTestDF((double x) -> x*x*x - 2, (double x) -> x, 0, 1, 0., 1, 100, (double x) -> x*x),
             new CasDeTestDF((double x) -> 0, (double x) -> 0, 0, 1, 0., 0, 100, (double x) -> 0),
-            new CasDeTestDF((double x) -> Math.sin(-x), (double x) -> 0, 0, 1, 0., 0, 100, (double x) -> Math.sin(x)),
+            new CasDeTestDF((double x) -> Math.cos(x), (double x) -> 0, 0, 1, 1, 0.5403023058681398, 100, (double x) -> Math.cos(x)),
+            new CasDeTestDF((double x) -> 2 * Math.sin(x), (double x) -> 1, 0, 1, 0., 0.8414709848078965, 100, (double x) -> Math.sin(x)),
+            new CasDeTestDF((double x) -> 1, (double x) -> 1, 0, 1, 1, 1, 100, (double x) -> 1)
         };
         
         try
@@ -158,7 +161,7 @@ public class DFTestLogger
         int longueur_maillage = (int) testParams.get("longueur_maillage");
         double a = (double) testParams.get("a");
         double b = (double) testParams.get("b");
-        double tol = 1e-8;
+        double tol = 1e-6;
         DF df = new DF();
         double[] subdivision = df.subdivision(a, b, longueur_maillage);
         
@@ -205,35 +208,30 @@ public class DFTestLogger
             return false;
         else
         {
-              for (int i = 0; i < longueur_maillage - 1; i++) 
-              {
-                  e_h = Math.max(e_h, Math.abs(resultatFonction[i] - resultat_attendu[i]));
-              }
-              System.out.println("e_h = " + e_h + "   e_h < tol : " + (e_h < tol));
-              return e_h < tol; 
-//            for(int i = 0; i < longueur_maillage - 1; i++)
-//            {
-//                erreur_absolue = erreur_absolue + Math.pow(resultatFonction[i] - resultat_attendu[i],2);
-//                norme_attendu = norme_attendu + Math.pow(resultat_attendu[i], 2);
-//                
-//                valeur_absolue = Math.abs(resultat_attendu[i] - resultatFonction[i]);
-//                
-//                if(e_h < valeur_absolue)
-//                    e_h = valeur_absolue;
-//            }
-//            System.out.print(e_h + "   " + (b-a)/longueur_maillage + "   ");
-//            if(Math.sqrt(norme_attendu) != 0.00)
-//            {
-//                System.out.println(Math.sqrt(erreur_absolue)/Math.sqrt(norme_attendu) < tol);
-//                return Math.sqrt(erreur_absolue)/Math.sqrt(norme_attendu) < tol;
-//            }
-//                
-//            else 
-//            {
-//                System.out.println(Math.sqrt(erreur_absolue) < tol);
-//                return Math.sqrt(erreur_absolue) < tol;
-//            }
-//                
+              
+            for(int i = 0; i < longueur_maillage - 1; i++)
+            {
+                erreur_absolue = erreur_absolue + Math.pow(resultatFonction[i] - resultat_attendu[i],2);
+                norme_attendu = norme_attendu + Math.pow(resultat_attendu[i], 2);
+                
+                valeur_absolue = Math.abs(resultat_attendu[i] - resultatFonction[i]);
+                
+                if(e_h < valeur_absolue)
+                    e_h = valeur_absolue;
+            }
+            System.out.print(e_h + "   " + (b-a)/longueur_maillage + "   ");
+            if(Math.sqrt(norme_attendu) != 0.00)
+            {
+                System.out.println(Math.sqrt(erreur_absolue)/Math.sqrt(norme_attendu) < tol);
+                return Math.sqrt(erreur_absolue)/Math.sqrt(norme_attendu) < tol;
+            }
+                
+            else 
+            {
+                System.out.println(Math.sqrt(erreur_absolue) < tol);
+                return Math.sqrt(erreur_absolue) < tol;
+            }
+                
         }
     }
     

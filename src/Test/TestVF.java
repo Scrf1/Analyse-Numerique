@@ -22,13 +22,11 @@ public class TestVF extends TestableAdapter
     {
         VF vf = new VF();
         Fonction f = (Fonction) testParams.get("f");
-        double a = (double) testParams.get("a");
-        double b = (double) testParams.get("b");
         Double u_a = (Double) testParams.get("u_a");
         Double u_b = (Double) testParams.get("u_b");
         int longueur_maillage = (int) testParams.get("longueur_maillage");
         
-        double resultat[] = vf.volumesFinis(a, b, longueur_maillage, f, u_a, u_b);
+        double resultat[] = vf.volumesFinis(longueur_maillage, u_a, u_b, f);
         
         testParams.put("resultatFonction", resultat);
     }
