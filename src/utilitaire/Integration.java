@@ -13,9 +13,9 @@ import interfaces.Fonction;
  */
 public class Integration 
 {
-    
     public static double gaussLegrend(double a, double b, Fonction f)
     {
         return ((b - a)/2) * ( f.calcul( (a-b)/(2* Math.sqrt(3)) + (a+b)/2 ) + f.calcul((b-a)/(2* Math.sqrt(3)) + (a+b)/2) );
     }
+    
 }
