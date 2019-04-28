@@ -11,5 +11,5 @@ package interfaces;
  */
 public interface IVF extends Subdivision
 {
-    double[] volumesFinis(double a, double b, int n, Fonction f, double u_debut, double u_fin);
+    double[] volumesFinis(int n, double u_debut, double u_fin ,Fonction f);
 }
