@@ -7,6 +7,7 @@ package classes;
 
 import classes.matrice.CRS;
 import classes.matrice.MatriceCreuse;
+import interfaces.Fonction;
 import java.util.ArrayList;
 
 /**
@@ -17,35 +18,16 @@ public class Main
 {
     public static void main(String[] args)
     {
-        double t[][] = {
-                            {10, 0, 0, 0, -2, 0}
-                           ,{3, 9, 0, 0, 0, 3}
-                           ,{0, 7, 8, 7, 0, 0}
-                           ,{3, 0, 8, 7, 5, 0}
-                           ,{0, 8, 0, 9, 9, 13}
-                           ,{0, 4, 0, 0, 2, -1}
-                        }; 
-        MatriceCreuse crs = new MatriceCreuse(6,6);
+        VF vf = new VF();
+        double[] res = vf.volumesFinis(1000, 0, 0, (double x) -> 2);
+        double[] sub = vf.subdivision(0, 1, 1000);
         
         
-        for(int i = 0; i<t.length; i++)
-        {
-            for(int j =0; j<t[i].length; j++)
-            {
-                crs.set(i, j, t[i][j]);
-            }
+//        for (int i = 0; i < sub.length; i++) {
+//            System.out.println(sub[i]);
+//        }
+        for (int i = 0; i < res.length; i++) {
+            System.out.println("Resultat = " + res[i] + "   RA = " + sub[i] * sub[i] + "  Erreur => " + Math.abs(res[i] - sub[i]*sub[i]) + "");
         }
-        System.out.println();
-        //crs.print();
-        ArrayList<Double> d = new ArrayList<>();
-        for (int i = 0; i < crs.getNbreColonnes(); i++) {
-            d.add(1.);
-        }
-        double[] result = crs.matriceVecteur(d);
-        
-        for (int i = 0; i < result.length; i++) {
-            System.out.println(result[i]);
-        }
-        
     }
 }

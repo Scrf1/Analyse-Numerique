@@ -16,6 +16,7 @@ import interfaces.Subdivision;
 public class DF extends DFabstrait
 {
 
+    
     @Override
 public double[] differencesFinies(double a, double b, int n, Fonction f, Fonction c, double u_debut, double u_fin) {
         double[] maillage = null;
@@ -62,9 +63,5 @@ public double[] differencesFinies(double a, double b, int n, Fonction f, Fonctio
         }
         return null;
     }
-//
-//    @Override
-//    public double[] differencesFinies(double[] maillage, Fonction f, Fonction c, double u_debut, double u_fin) {
-//        double b[] = 
-//    }
+
 }
