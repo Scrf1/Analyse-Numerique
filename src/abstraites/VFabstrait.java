@@ -14,5 +14,7 @@ import interfaces.IVF;
  */
 public abstract class VFabstrait implements IVF
 {
-    public abstract double[] volumesFinis(double a, double b, int n, Fonction f, double u_debut, double u_fin);
+    @Override
+    public abstract double[] volumesFinis(int n, double u_debut, double u_fin, Fonction f);
+   
 }
