@@ -10,7 +10,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import py4j.GatewayServer;
 
 /**
  *
@@ -167,10 +169,18 @@ public class Gauss {
             b[i] = 1.0;
         }
         
-        //This part solves the matric equation and prints the results of X
-        double[] x = GaussSiedel(M,b); 
-        for(int i=0;i<x.length;i++)
-            System.out.println("X["+i+"] = "+x[i]);
+        /*This part solves the matric equation and prints the results of U*/
+        double[] u = GaussSiedel(M,b); 
+        ArrayList<utilitaire.Position> position =  positionUi(u, n);
+        System.out.println("Equation solved, now passing it to python\n");
+        GetArray array = new GetArray(u,position);
+
+        GatewayServer gatewayServer = new GatewayServer(new GetArray(u,position));
+        gatewayServer.start();
+          for(int i=0;i<u.length;i++)
+            System.out.println("X["+i+"] = "+u[i]+" position ("+position.get(i).getI()+","+position.get(i).getJ()+")");
+          
+        System.out.println("Gateway Server Started");
     }
     
     public static double[] GaussSiedel(MatriceCreuse M, double[] b){    
@@ -185,4 +195,16 @@ public class Gauss {
         writer.println();
         return gausSeidel.solve();   
     }
+      public static ArrayList<utilitaire.Position> positionUi(double[] u,int n){
+        int i,j;
+        ArrayList<utilitaire.Position> pos = new ArrayList();
+        for (int k=0; k<u.length; k++ ){
+            i = k%(n-1) + 1;
+            j = k/(n-1) +1;
+            pos.add(new utilitaire.Position(i,j));
+        }
+        return pos;
+    }
+
+  
 }
