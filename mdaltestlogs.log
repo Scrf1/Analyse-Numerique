@@ -56,3 +56,7 @@
 ---;---;Test.DFTestLogger.testsDifferencesFinies;1555673970101;-1;start;---;---;1555673970101;
 ---;---;Test.DFTestLogger.testsDifferencesFinies;1555673970101;292;end;false;1555673970393;1555673970101;
 ---;---;Test.DFTestLogger.main;1555673970090;313;end;false;1555673970403;1555673970090;
+---;---;Test.VFTestLogger.main;1556545660148;-1;start;---;---;1556545660148;
+---;---;Test.DFTestLogger.testsDifferencesFinies;1556545660156;-1;start;---;---;1556545660156;
+---;---;Test.DFTestLogger.testsDifferencesFinies;1556545660156;155;end;true;1556545660311;1556545660156;
+---;---;Test.VFTestLogger.main;1556545660148;166;end;true;1556545660314;1556545660148;

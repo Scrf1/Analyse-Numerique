@@ -19,7 +19,7 @@ public class Position {
         return j;
     }
 
-    public Position(int i, int j) {
+    public Position(int i, int j,int n) {
         this.i = i;
         this.j = j;
     }

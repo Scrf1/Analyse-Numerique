@@ -28,9 +28,9 @@ public class GetArray {
         this.i = new double[pos.size()];
         this.j = new double[pos.size()];
         for (int ji=0; ji<this.pos.size(); ji++){
-            this.j[ji] = pos.get(ji).getJ();
-            this.i[ji] = pos.get(ji).getI();
-            System.out.println(pos.get(ji).getI());
+            this.j[ji] = (1.0)* pos.get(ji).getJ()/pos.size();
+            this.i[ji] = (1.0)* pos.get(ji).getI()/pos.size();
+            System.out.println("It is "+(1.0)*pos.get(ji).getI()/pos.size());
         }
         
     }

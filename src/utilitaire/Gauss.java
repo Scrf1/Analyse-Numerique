@@ -13,6 +13,8 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import py4j.GatewayServer;
+import utilitaire.Fonction;
+
 
 /**
  *
@@ -112,6 +114,66 @@ public class Gauss {
         return M;
     }
     
+    public static Equation remplir(int n,int m,Fonction f,MatriceCreuse Ucn)
+    {
+
+        int k=num(n-1,m-1,n);
+        MatriceCreuse tab=new MatriceCreuse(k,k);
+        Equation equation=new Equation ();
+        equation.B=new double[k+1];
+        int d=0;
+    
+        for (double index:equation.B)
+        {
+            index=0;
+        }
+
+        for (int i=1;i<n;i++)
+        {
+            for (int j=1;j<m;j++)
+            {
+                int x=num(i,j,n),y=num(i-1,j,n),z=num(i+1,j,n),t=num(i,j-1,n),w=num(i,j+1,n);
+                equation.B[x]=f.calcul ((double) i/n,(double)j/n);
+                tab.set(x,x,2.0*((1.0/(n*n))+(1.0/(m*m))));
+                if ((i-1)>0)
+                {
+                    tab.set(x,y,(-1.0/(n*n)));
+                }
+                if ((i+1)<n)
+                {
+                    tab.set(x,z,(-1.0/(n*n)));
+                }
+                if ((j-1)>0)
+                {
+                    tab.set(x,t,(-1.0/(m*m)));
+                }
+                if ((i+1)<n)
+                {
+                    tab.set(x,w,(-1.0/(m*m)));
+                }
+                if ((i+1)==n)
+                {
+                    equation.B[x]+= (1.0/(n*n)*Ucn.get (n,j));
+                }
+                if ((i-1)==0)
+                {
+                    equation.B[x]+= (1.0/(n*n)*Ucn.get (0,j));
+                }
+                if ((j-1)==0)
+                {
+                    equation.B[x]+= (1.0/(m*m)*Ucn.get (i,0));
+                }
+                if ((j+1)==m)
+                {
+                    equation.B[x]+= (1.0/(m*m)*Ucn.get (i,m));
+                }
+
+            }
+        }
+        equation.A=tab;
+        return equation;
+    }
+    
     public static MatriceCreuse remplir(int n,int m)
     {
         int k=num(n-1,m-1,n);
@@ -151,6 +213,7 @@ public class Gauss {
     
     public static void main(String[] args) throws IOException{
          int n; 
+         Equation equat; 
         MatriceCreuse M;
         
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -159,15 +222,22 @@ public class Gauss {
         System.out.println("Enter the number meshes in the equation:");
         n = Integer.parseInt(reader.readLine());
         //Here he are going to fill the matrix M with n*n meshes
-        M = remplir(n,n);
+        MatriceCreuse matriceCreuse=new MatriceCreuse (n,n);
+        for (int i=0;i<n;i++)
+        {
+            for (int j=0;j<n;j++)
+                matriceCreuse.set (i,j,1);
+        }
+        Fonction f = (double x,double y)->x+y;
+        equat = remplir(n,n,f,matriceCreuse);
+        M = equat.A;
+        //M = remplir(n, n);
 
         int m = (n-1)*(n-1);
         double[] b = new double[m];
         
         //TODO Here we need to refill b using the method given by Mandingo Mandenga
-        for (int i=0; i<m; i++){
-            b[i] = 1.0;
-        }
+        b = equat.B;
         
         /*This part solves the matric equation and prints the results of U*/
         double[] u = GaussSiedel(M,b); 
@@ -201,7 +271,7 @@ public class Gauss {
         for (int k=0; k<u.length; k++ ){
             i = k%(n-1) + 1;
             j = k/(n-1) +1;
-            pos.add(new utilitaire.Position(i,j));
+            pos.add(new utilitaire.Position(i,j,n));
         }
         return pos;
     }
