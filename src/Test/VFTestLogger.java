@@ -5,10 +5,7 @@
  */
 package Test;
 
-import static Test.DFTestLogger.classeATester;
-import Test.cas.CasDeTestDF;
 import Test.cas.CasDeTestVF;
-import classes.DF;
 import classes.VF;
 import static com.mdalsoft.test.DefaultTestLogger.logTest;
 import com.mdalsoft.test.Testable;
