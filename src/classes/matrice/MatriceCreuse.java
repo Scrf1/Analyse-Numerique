@@ -43,7 +43,9 @@ public class MatriceCreuse
     {
         if(!vals.containsKey(Integer.toString(i) + "," + Integer.toString(j)))
             vals.put(Integer.toString(i) + "," + Integer.toString(j),
-                    new Valeur(x, i, j));     
+                    new Valeur(x, i, j));
+        else
+            vals.replace(Integer.toString(i) + "," + Integer.toString(j), new Valeur(x,i,j));
     }   
     
     public double[] matriceVecteur(ArrayList<Double> vecteur)

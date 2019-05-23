@@ -1,0 +1,5 @@
+from py4j.java_gateway import JavaGateway
+gateway = JavaGateway()
+x = gateway.entry_point.getX()
+i = gateway.entry_point.getI()
+j = gateway.entry_point.getJ()

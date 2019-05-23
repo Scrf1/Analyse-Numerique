@@ -3,9 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package Utilitaire;
+package utilitaire;
 
 import classes.matrice.MatriceCreuse;
+import interfaces.Fonction2;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -13,7 +14,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import py4j.GatewayServer;
-import utilitaire.Fonction;
+
 
 
 /**
@@ -77,7 +78,7 @@ public class Gauss {
     public double[] solve(){
         int iterations = 0;
         int n = M.getNbreColonnes();
-        double epsilon = 1e-15;
+        double epsilon = 1e-8;
         double[] X = new double[n];
         double[] P = new double[n];
         Arrays.fill(X, 0);
@@ -89,7 +90,7 @@ public class Gauss {
                     if(j != i)
                         sum -= M.get(i, j)*X[j];
                 //updating x_i for use in next row calc
-                X[i] = 1/M.get(i,i)*sum;
+                X[i] = (1/M.get(i,i))*sum;
             }
             iterations++;
             if(iterations == 1)
@@ -108,18 +109,19 @@ public class Gauss {
     public static MatriceCreuse augmentMatrix(MatriceCreuse M, double[] b){
         int m = M.getNbreColonnes();
         M.setNbreColonnes(m+1);
-        for(int i = 0; i < M.getNbreLignes(); i++){
+        m = M.getNbreColonnes();
+        for(int i = 0; i <= M.getNbreLignes(); i++){
             M.set(i, m, b[i]);
         }
         return M;
     }
     
-    public static Equation remplir(int n,int m,Fonction f,MatriceCreuse Ucn)
+    public static Equation remplir(int n,int m,Fonction2 f,MatriceCreuse Ucn)
     {
 
         int k=num(n-1,m-1,n);
         MatriceCreuse tab=new MatriceCreuse(k,k);
-        Equation equation=new Equation ();
+        Equation equation=new Equation();
         equation.B=new double[k+1];
         int d=0;
     
@@ -212,40 +214,50 @@ public class Gauss {
     }
     
     public static void main(String[] args) throws IOException{
-         int n; 
+         int n,m; 
          Equation equat; 
         MatriceCreuse M;
         
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
         
-        System.out.println("Enter the number meshes in the equation:");
+        System.out.println("Enter the number n of meshes in the equation:");
         n = Integer.parseInt(reader.readLine());
+        System.out.println("Enter the number m of meshes in the equation:");
+        m = Integer.parseInt(reader.readLine());
         //Here he are going to fill the matrix M with n*n meshes
-        MatriceCreuse matriceCreuse=new MatriceCreuse (n,n);
+        MatriceCreuse matriceCreuse=new MatriceCreuse (n,m);
         for (int i=0;i<n;i++)
         {
-            for (int j=0;j<n;j++)
+            for (int j=0;j<m;j++)
                 matriceCreuse.set (i,j,1);
         }
-        Fonction f = (double x,double y)->x+y;
-        equat = remplir(n,n,f,matriceCreuse);
+        Fonction2 f = (double x,double y)->-4;
+        equat = remplir(n,m,f,matriceCreuse);
         M = equat.A;
         //M = remplir(n, n);
+        for(int i=0; i<=M.getNbreLignes(); i++){
+            for(int j=0; j<=M.getNbreColonnes(); j++)
+                System.out.print("\t \t"+M.get(i, j));
+            System.out.println("");
+        }
 
-        int m = (n-1)*(n-1);
-        double[] b = new double[m];
-        
+        double[]  b = equat.B;
+        System.out.println("Vecteur B");
+        for(int i =0;i<b.length; i++){
+            System.out.print("\t "+b[i]);
+        }
+        System.out.println("");
         //TODO Here we need to refill b using the method given by Mandingo Mandenga
-        b = equat.B;
+       
         
-        /*This part solves the matric equation and prints the results of U*/
+                
         double[] u = GaussSiedel(M,b); 
         ArrayList<utilitaire.Position> position =  positionUi(u, n);
         System.out.println("Equation solved, now passing it to python\n");
-        GetArray array = new GetArray(u,position);
+        GetArray array = new GetArray(u,position,n,m);
 
-        GatewayServer gatewayServer = new GatewayServer(new GetArray(u,position));
+        GatewayServer gatewayServer = new GatewayServer(new GetArray(u,position,n,m));
         gatewayServer.start();
           for(int i=0;i<u.length;i++)
             System.out.println("X["+i+"] = "+u[i]+" position ("+position.get(i).getI()+","+position.get(i).getJ()+")");
