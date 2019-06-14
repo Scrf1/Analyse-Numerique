@@ -22,7 +22,7 @@ import py4j.GatewayServer;
  * @author dell
  */
 public class Gauss {
-    public static final int MAX_ITERATIONS = 100;
+    public static final int MAX_ITERATIONS = 500;
     private MatriceCreuse M;
     public Gauss(MatriceCreuse matrix) {M = matrix;}
     
@@ -115,154 +115,14 @@ public class Gauss {
         }
         return M;
     }
-    
-    public static Equation remplir(int n,int m,Fonction2 f,MatriceCreuse Ucn)
-    {
 
-        int k=num(n-1,m-1,n);
-        MatriceCreuse tab=new MatriceCreuse(k,k);
-        Equation equation=new Equation();
-        equation.B=new double[k+1];
-        int d=0;
-    
-        for (double index:equation.B)
-        {
-            index=0;
-        }
-
-        for (int i=1;i<n;i++)
-        {
-            for (int j=1;j<m;j++)
-            {
-                int x=num(i,j,n),y=num(i-1,j,n),z=num(i+1,j,n),t=num(i,j-1,n),w=num(i,j+1,n);
-                equation.B[x]=f.calcul ((double) i/n,(double)j/n);
-                tab.set(x,x,2.0*((1.0/(n*n))+(1.0/(m*m))));
-                if ((i-1)>0)
-                {
-                    tab.set(x,y,(-1.0/(n*n)));
-                }
-                if ((i+1)<n)
-                {
-                    tab.set(x,z,(-1.0/(n*n)));
-                }
-                if ((j-1)>0)
-                {
-                    tab.set(x,t,(-1.0/(m*m)));
-                }
-                if ((i+1)<n)
-                {
-                    tab.set(x,w,(-1.0/(m*m)));
-                }
-                if ((i+1)==n)
-                {
-                    equation.B[x]+= (1.0/(n*n)*Ucn.get (n,j));
-                }
-                if ((i-1)==0)
-                {
-                    equation.B[x]+= (1.0/(n*n)*Ucn.get (0,j));
-                }
-                if ((j-1)==0)
-                {
-                    equation.B[x]+= (1.0/(m*m)*Ucn.get (i,0));
-                }
-                if ((j+1)==m)
-                {
-                    equation.B[x]+= (1.0/(m*m)*Ucn.get (i,m));
-                }
-
-            }
-        }
-        equation.A=tab;
-        return equation;
-    }
-    
-    public static MatriceCreuse remplir(int n,int m)
-    {
-        int k=num(n-1,m-1,n);
-        MatriceCreuse tab=new MatriceCreuse(k,k);
-        int d=0;
-        for (int i=1;i<n;i++)
-        {
-            for (int j=1;j<m;j++)
-            {
-                int x=num(i,j,n),y=num(i-1,j,n),z=num(i+1,j,n),t=num(i,j-1,n),w=num(i,j+1,n);
-                tab.set(x,x,2.0*((1.0/(n*n))+(1.0/(m*m))));
-                if ((i-1)>0)
-                {
-                    tab.set(x,y,(-1.0/(n*n)));
-                }
-                if ((i+1)<n)
-                {
-                    tab.set(x,z,(-1.0/(n*n)));
-                }
-                if ((j-1)>0)
-                {
-                    tab.set(x,t,(-1.0/(m*m)));
-                }
-                if ((i+1)<n)
-                {
-                    tab.set(x,w,(-1.0/(m*m)));
-                }
-            }
-        }
-        return tab;
-    }
-        
-    public static int num(int i,int j,int n)
-    {
-        return (i-1)+(n-1)*(j-1);
-    }
-    
-    public static void main(String[] args) throws IOException{
-         int n,m; 
-         Equation equat; 
-        MatriceCreuse M;
-        
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-
-        
-        System.out.println("Enter the number n of meshes in the equation:");
-        n = Integer.parseInt(reader.readLine());
-        System.out.println("Enter the number m of meshes in the equation:");
-        m = Integer.parseInt(reader.readLine());
-        //Here he are going to fill the matrix M with n*n meshes
-        MatriceCreuse matriceCreuse=new MatriceCreuse (n,m);
-        for (int i=0;i<n;i++)
-        {
-            for (int j=0;j<m;j++)
-                matriceCreuse.set (i,j,1);
-        }
-        Fonction2 f = (double x,double y)->-4;
-        equat = remplir(n,m,f,matriceCreuse);
-        M = equat.A;
-        //M = remplir(n, n);
-        for(int i=0; i<=M.getNbreLignes(); i++){
-            for(int j=0; j<=M.getNbreColonnes(); j++)
-                System.out.print("\t \t"+M.get(i, j));
-            System.out.println("");
-        }
-
-        double[]  b = equat.B;
-        System.out.println("Vecteur B");
-        for(int i =0;i<b.length; i++){
-            System.out.print("\t "+b[i]);
-        }
-        System.out.println("");
-        //TODO Here we need to refill b using the method given by Mandingo Mandenga
-       
-        
-                
-        double[] u = GaussSiedel(M,b); 
-        ArrayList<utilitaire.Position> position =  positionUi(u, n);
+ 
+   
+    public static void sendToPython(double[] u, ArrayList<utilitaire.Position> position, int n,int m){
         System.out.println("Equation solved, now passing it to python\n");
         GetArray array = new GetArray(u,position,n,m);
-
         GatewayServer gatewayServer = new GatewayServer(new GetArray(u,position,n,m));
         gatewayServer.start();
-          for(int i=0;i<u.length;i++)
-            System.out.println("X["+i+"] = "+u[i]+" position ("+position.get(i).getI()+","+position.get(i).getJ()+")");
-          
-        System.out.println("Gateway Server Started");
     }
     
     public static double[] GaussSiedel(MatriceCreuse M, double[] b){    
